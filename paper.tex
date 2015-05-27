@@ -176,9 +176,9 @@ occluded by a circular stop. This physical block is put in place to
 prevent damage to the detector from the high photon flux seen at the
 center of the X-ray beam. Surrounding the blocked region, the
 remainder of the image displays an exponentially decaying background.
-Interrupting this largely symmetric background are the diffraction
-peaks we locate and model.  Our core data analysis pipeline includes
-two steps: image segmentation and image modeling with MCMC processes.
+Interrupting this background are symmetric pairs of diffraction peaks
+we locate and model.  Our core data analysis pipeline includes two
+steps: image segmentation and image modeling with MCMC processes.
 
 \figureimgs
 
@@ -186,48 +186,39 @@ two steps: image segmentation and image modeling with MCMC processes.
 
 \subsection{Image segmentation}
 
-The central circular blocked region is first located and acts as a
-relative reference point for subsequent operations. Consistent with
+The dark central circular blocked region is first located and acts as
+a relative reference point for subsequent operations. Consistent with
 experimental design, it is assumed to contain the center of the
 diffraction pattern, although the center of the diffraction pattern is
-not assumed to be at the center of the blocked region. The central
-blocked area is as dark or darker than the background at image edges
-and the edge of the background surrounding it is one of the brightest
-regions, so the image is first split into areas with values less than
-and areas with values greater than two standard deviations above the
-mean. This partitioning yields a binary image where the center blocked
-region is surrounded by a halo that is the upper end of the pattern
-background and occasional dots where diffraction peaks rise more than
-two standard deviations above background. This binary image is
-converted to a hierarchical contour set with OpenCV. The blocked
-region is taken as the inner-most contour and then modeled as the
-smallest circle that can contain it. 
+not assumed to be at the center of the blocked region. The edge of the
+background surrounding the block is the brightest region, so the image
+is first split between areas with values less than and greater than
+two standard deviations above the mean. This partitioning yields a
+binary image where the center blocked region is surrounded by a halo
+of the upper end of the pattern background and occasional dots where
+diffraction peaks rise more than two standard deviations above
+background. This binary image is converted to a hierarchical contour
+set with OpenCV. The blocked region is taken as the inner-most contour
+and then modeled as the smallest enclosing circle, shown as dark
+magenta in Figure~\ref{fig:workflow}. 
 
 
-\magda{This paragraph is tedious and somewhat confusing but I'm
-not sure how best to fix it.}
-With the central blocked region identified (shown as a dark magenta
-overlay in Figure~\ref{fig:workflow}) we identify local maxima and
-mask out those found in regions of the image unlikely to provide
-diffraction peaks of interest.  After smoothing through convolution
-with a Gaussian kernel maxima are identified by treating each 3 by 3
-pixel region as a group to prevent stochastic brightness variation
-from identifying maxima separated by single pixel gaps. The resulting
-local maxima are then accepted as peaks or rejected based on masking
-parameters.  We begin with a complete image and first mask a circular
-zone centered on the central blocked region. This prevents the edge
-between the blocked region and the background from being interpreted
-as ring of peaks. Next we mask regions below the 80th percentile,
-eliminating maxima in regions dominated by detector noise. Finally, we
-mask regions near the image edge to cull partially cropped peaks. The
+\dave{I cut this down and simplified. It can be removed or further
+reworked if desired.}
+With the central blocked region located, we identify local maxima in 3
+by 3 pixel groups after Gaussian smoothing and mask those found in
+regions unlikely to provide peaks of interest.  Resulting maxima are
+accepted or rejected as peaks based on masking parameters.  Masked
+rejection-regions consist of: 1) a circular zone around the central
+blocked region where the blocking generates non-peak local maxima, 2)
+areas below the 80th percentile where detector noise dominates, 3)
+areas near the image edge where peaks are partially cropped. The
 resulting unmasked area from which we keep maxima is depicted as light
 purple overlay in Figure~\ref{fig:workflow}.
 
 \figureworkflow
 
-\magda{Before we can say the following, we should say that peaks
-come in pairs.}
-Next, maxima are clustered into pairs of peaks based on their distance
+Next, maxima are clustered into peak pairs based on their distance
 and angle from the center of the blocked region. Starting with those
 maxima nearest the blocked region, a corresponding maxima is sought an
 equal distance away from the blocked region and located such that the
@@ -241,17 +232,15 @@ peak pairs and the background is fit and subtracted.
 The background is subtracted by first masking arcs encompassing peak
 pairs and then fitting a double exponential to a radial profile of the
 remaining image. An arc swept 12$^\circ$ out on either side of each
-peak pair is sufficient to mask the effect of the diffraction peaks on
-the background to be generated (shown as a light gray arc under the
-peak pairs in Figure~\ref{fig:workflow}). We next calculate a radial
-profile of the image, \magda{centered on the center sounds repetitive}
-centered on the pattern center and omitting the regions surrounding
-diffraction lines. We fit a double exponential function of the form
-$background = a+ b e^{-x c} + d e^{-x e}$ to the radial profile. From
-these parameters we generate an estimates background image and
-subtract it from the real image, allowing us to extract the $d{10}$
-peaks as regions of interest (ROIs) unhindered by an overlaid
-diffraction background.
+peak pair masks the effect of the diffraction peaks on the background
+(shown as a light gray arc under the peak pairs in
+Figure~\ref{fig:workflow}). We calculate a radial profile of the image
+around the pattern center, omitting diffraction line regions. We fit a
+double exponential function of the form $background = a+ b e^{-x c} +
+d e^{-x e}$ to the radial profile. From these parameters we generate
+an estimated background image and subtract it from the real image,
+allowing us to extract the $d{10}$ peaks as regions of interest (ROIs)
+unhindered by an overlaid diffraction background.
 
 \subsection{Image modeling with MCMC processes}
 
@@ -286,7 +275,10 @@ center to precisely calculate $d_{10}$ spacing (as in
 Figure~\ref{fig:workflow}), we automatically integrate our uncertainty
 about peak height, spread, and decay.
 
+
+%%%%%%%%%%%
 \section{Preliminary Evaluation}
+\label{sec:eval}
 
 We apply our workflow to a test corpus of 1,220 images generated using
 X-ray diffraction during insect flight muscle research at Argonne
@@ -300,20 +292,18 @@ shown peaks.  We find that our initial image segmentation step
 successfully models the center blocked region of each image in greater
 than 99\% of images in our test corpus of 1,220 images. The overall
 process allows us to calculate peak-to-peak distances to sub-pixel
-accuracy with a confidence interval of 90\%.  After marginalizing over
-these other parameters we obtain sub-pixel accuracy with a 95\%
-confidence interval for the corpus images on which this technique has
-been validated.  MCMC sampling combined with image segmentation allows
-us to precisely, accurately, and automatically locate the $d_{10}$
-peak center and thus calculate the lattice spacing measured by a
-diffraction image to within 0.03 nm.
+accuracy with a confidence interval of 90\%. MCMC sampling combined
+with image segmentation allows us to precisely, accurately, and
+automatically locate the $d_{10}$ peak center and thus calculate the
+lattice spacing measured by a diffraction image to within 0.03 nm.
 
 Because the images in our corpus are a standard sample of those
 produced by high-speed X-ray diffraction, our positive preliminary
 results are a strong indication for the potential of this approach.
 
+
 %%%%%%%%%%%
-\section{Challenging and Next Steps}
+\section{Challenges and Next Steps}
 \label{sec:challenges}
 
 Our initial data processing pipeline produces an automated,
@@ -321,14 +311,20 @@ reproducible, objective estimate of relevant image parameters but the
 following challenges remain:
 
 \begin{itemize}[noitemsep]
-\item Development of a declarative language to describe processing steps will speed use of this technique and ease reproducibility. 
-The key question is to define the types of operations that users should be able to specify and how to specify them. Our goal is
-to generalize to a broad set of analysis needs for X-ray images of muscle structures.
+\item Development of a declarative language to describe processing
+    steps will speed use of this technique and ease reproducibility.
+    The key question is to define the types of operations that users
+    should be able to specify and how to specify them. Our goal is to
+    generalize to a broad set of analysis needs for X-ray images of
+    muscle structure.
 \item Packaging of this tool chain into a cloud deployable
-containerized image will enable trivial scaling to work with larger
-datasets. Furthermore, the ability to access to tool chain directly through a web browser 
-with automatic back-end deployment of the analysis pipeline will facilitate adotpion. 
-\item Application of these techniques to coming ultra-high temporal-resolution images with far lower signal:noise will strain autosegmentation and peak-fitting techniques. 
+    containerized image will enable trivial scaling to work with
+    larger datasets. Furthermore, the ability to access to tool chain
+    directly through a web browser with automatic back-end deployment
+    of the analysis pipeline will facilitate adoption. 
+\item Application of these techniques to coming ultra-high
+    temporal-resolution images with far lower signal:noise will strain
+    autosegmentation and peak-fitting techniques. 
 \end{itemize}
 
 
