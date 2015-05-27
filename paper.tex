@@ -90,7 +90,7 @@
 }
 
 \begin{document}
-\title{Automated analysis of muscle X-ray diffraction \\ imaging with MCMC}
+\title{Automated Analysis of Muscle X-ray Diffraction \\ Imaging with MCMC}
 \author{C.\ David Williams$^{1,2}$,  Magdalena Balazinska$^2$, Thomas Daniel$^1$ \\
 \affaddr{$^1$Department of Biology, $^2$Department of Computer Science \& Engineering}\\
 \affaddr{University of Washington} \\
@@ -109,16 +109,16 @@
 \sloppy
 
 %%%%%%%%%%%
-\section{Questions addressed}
-\label{sec:addressed}
+%\section{Questions addressed}
+%\label{sec:addressed}
 
 
-In this work, we focus on the following questions:
+%In this work, we focus on the following questions:
 
-\begin{itemize}[noitemsep]
-\item Are sufficient conserved markers available in small-angle scattering diffraction images for automatic segmentation?
-\item Does MCMC distribution fitting provide reliable estimates of diffraction peak properties such as center and decay?
-\end{itemize}
+%\begin{itemize}[noitemsep]
+%\item Are sufficient conserved markers available in small-angle scattering diffraction images for automatic segmentation?
+%\item Does MCMC distribution fitting provide reliable estimates of diffraction peak properties such as center and decay?
+%\end{itemize}
 
 
 %%%%%%%%%%%
@@ -135,8 +135,8 @@ information is recorded when an X-ray beam passes through and scatters
 off a muscle sample to produce an image such as that shown in
 Figure~\ref{fig:imgs}.
 
-Existing analytic approaches extract structural parameters using
-expert hand-digitization with NIH ImageJ. This produces repeatable
+Today, human experts manually extract structural parameters
+from X-ray images using NIH ImageJ. This produces repeatable
 measurements but remains subjective, fails to provide confidence
 intervals for the measured values, and is not reproducible by naive
 digitizers. Additionally hand digitization is a time-intensive
@@ -147,10 +147,15 @@ short-timescale components of muscle contraction and generating data
 sets with many thousands of images. The need for an automated and
 reproducible image analysis tool chain is clear. 
 
-We present the first components of a processing tool chain which first
-segments the diffraction image into regions of interest using
+The goal of our project is to build a service for the automated
+analysis of X-ray images of muscle structures.  Users should specify
+the analysis that they need using a declarative query interface and
+the system should automatically process the user's image database.  In
+this extended abstract, we present the first components of the
+processing tool chain at the heart of this service. The toolchain
+first segments the diffraction image into regions of interest using
 conserved features and then samples the possible parameter values with
-a Markov chain Monte Carlo approach.  
+a Markov chain Monte Carlo approach.
 
 
 %%%%%%%%%%%
@@ -172,24 +177,12 @@ prevent damage to the detector from the high photon flux seen at the
 center of the X-ray beam. Surrounding the blocked region, the
 remainder of the image displays an exponentially decaying background.
 Interrupting this largely symmetric background are the diffraction
-peaks we locate and model. 
+peaks we locate and model.  Our core data analysis pipeline includes
+two steps: image segmentation and image modeling with MCMC processes.
 
 \figureimgs
 
-We apply our workflow to a test corpus of 1,220 images generated using
-X-ray diffraction during insect flight muscle research at Argonne
-National Laboratory's BioCAT Beamline. Sample high-quality and
-challenging images are shown in Figures~\ref{fig:imgs}A and
-\ref{fig:imgs}B. Our technique segments these images into regions of
-interest, identifies the approximate locations of the diffraction
-peaks, subtracts background from the regions surrounding the peaks,
-and computes the distribution of possible parameters which underly the
-shown peaks. This allows us to calculate peak-to-peak distances to
-sub-pixel accuracy with a confidence interval of 90\%.
 
-Because the images in our corpus are a standard sample of those
-produced by high-speed X-ray diffraction, our positive preliminary
-results are a strong indication for the potential of this approach.
 
 \subsection{Image segmentation}
 
@@ -208,10 +201,11 @@ background and occasional dots where diffraction peaks rise more than
 two standard deviations above background. This binary image is
 converted to a hierarchical contour set with OpenCV. The blocked
 region is taken as the inner-most contour and then modeled as the
-smallest circle which can contain it. This identification is
-successful in greater than 99\% of images in our test corpus of 1,220
-images.
+smallest circle that can contain it. 
 
+
+\magda{This paragraph is tedious and somewhat confusing but I'm
+not sure how best to fix it.}
 With the central blocked region identified (shown as a dark magenta
 overlay in Figure~\ref{fig:workflow}) we identify local maxima and
 mask out those found in regions of the image unlikely to provide
@@ -231,6 +225,8 @@ purple overlay in Figure~\ref{fig:workflow}.
 
 \figureworkflow
 
+\magda{Before we can say the following, we should say that peaks
+come in pairs.}
 Next, maxima are clustered into pairs of peaks based on their distance
 and angle from the center of the blocked region. Starting with those
 maxima nearest the blocked region, a corresponding maxima is sought an
@@ -248,13 +244,14 @@ remaining image. An arc swept 12$^\circ$ out on either side of each
 peak pair is sufficient to mask the effect of the diffraction peaks on
 the background to be generated (shown as a light gray arc under the
 peak pairs in Figure~\ref{fig:workflow}). We next calculate a radial
-profile of the image, centered on the pattern center and omitting the
-regions surrounding diffraction lines. We fit a double exponential
-function of the form $background = a+ b e^{-x c} + d e^{-x e}$ to the
-radial profile. From these parameters we generate an estimates
-background image and subtract it from the real image, allowing us to
-extract the $d{10}$ peaks as regions of interest (ROIs) unhindered by
-an overlaid diffraction background. 
+profile of the image, \magda{centered on the center sounds repetitive}
+centered on the pattern center and omitting the regions surrounding
+diffraction lines. We fit a double exponential function of the form
+$background = a+ b e^{-x c} + d e^{-x e}$ to the radial profile. From
+these parameters we generate an estimates background image and
+subtract it from the real image, allowing us to extract the $d{10}$
+peaks as regions of interest (ROIs) unhindered by an overlaid
+diffraction background.
 
 \subsection{Image modeling with MCMC processes}
 
@@ -287,27 +284,50 @@ subset of parameters marginalizes across those we discard. That is,
 when we are interested in only the x- and y-locations of the peak
 center to precisely calculate $d_{10}$ spacing (as in
 Figure~\ref{fig:workflow}), we automatically integrate our uncertainty
-about peak height, spread, and decay. After marginalizing over these
-other parameters we obtain sub-pixel accuracy with a 95\% confidence
-interval for the corpus images on which this technique has been
-validated.  MCMC sampling combined with image segmentation allows us
-to precisely, accurately, and automatically locate the $d_{10}$ peak
-center and thus calculate the lattice spacing measured by a
+about peak height, spread, and decay.
+
+\section{Preliminary Evaluation}
+
+We apply our workflow to a test corpus of 1,220 images generated using
+X-ray diffraction during insect flight muscle research at Argonne
+National Laboratory's BioCAT Beamline. Sample high-quality and
+challenging images are shown in Figures~\ref{fig:imgs}A and
+\ref{fig:imgs}B. Our technique segments these images into regions of
+interest, identifies the approximate locations of the diffraction
+peaks, subtracts background from the regions surrounding the peaks,
+and computes the distribution of possible parameters which underly the
+shown peaks.  We find that our initial image segmentation step
+successfully models the center blocked region of each image in greater
+than 99\% of images in our test corpus of 1,220 images. The overall
+process allows us to calculate peak-to-peak distances to sub-pixel
+accuracy with a confidence interval of 90\%.  After marginalizing over
+these other parameters we obtain sub-pixel accuracy with a 95\%
+confidence interval for the corpus images on which this technique has
+been validated.  MCMC sampling combined with image segmentation allows
+us to precisely, accurately, and automatically locate the $d_{10}$
+peak center and thus calculate the lattice spacing measured by a
 diffraction image to within 0.03 nm.
 
+Because the images in our corpus are a standard sample of those
+produced by high-speed X-ray diffraction, our positive preliminary
+results are a strong indication for the potential of this approach.
 
 %%%%%%%%%%%
-\section{Challenging problems}
+\section{Challenging and Next Steps}
 \label{sec:challenges}
 
-
-Our approach produces an automated, reproducible, objective estimate of relevant image parameters but the following challenges remain:
+Our initial data processing pipeline produces an automated,
+reproducible, objective estimate of relevant image parameters but the
+following challenges remain:
 
 \begin{itemize}[noitemsep]
 \item Development of a declarative language to describe processing steps will speed use of this technique and ease reproducibility. 
+The key question is to define the types of operations that users should be able to specify and how to specify them. Our goal is
+to generalize to a broad set of analysis needs for X-ray images of muscle structures.
 \item Packaging of this tool chain into a cloud deployable
 containerized image will enable trivial scaling to work with larger
-datasets. 
+datasets. Furthermore, the ability to access to tool chain directly through a web browser 
+with automatic back-end deployment of the analysis pipeline will facilitate adotpion. 
 \item Application of these techniques to coming ultra-high temporal-resolution images with far lower signal:noise will strain autosegmentation and peak-fitting techniques. 
 \end{itemize}
 
