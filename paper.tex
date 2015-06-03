@@ -1,60 +1,26 @@
-\documentclass{sig-alternate}
+\documentclass{llncs}
 
 \usepackage[usenames,dvipsnames]{color}
-\usepackage{xspace}
+\usepackage{graphicx}
 
-\usepackage{fancyvrb}
-\DefineVerbatimEnvironment{code}{Verbatim}{fontsize=\small}
-\DefineVerbatimEnvironment{example}{Verbatim}{fontsize=\small}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Looks better (and more concise) than Times New Roman
-\usepackage{times}
-% Better spacing
-\usepackage{microtype}
-\usepackage[normalem]{ulem}
-\usepackage{enumitem}
-% Caption package both lets you set the spacing between figure and caption
-% and also makes the \figref{} point to the right place.
-\usepackage[font=bf,aboveskip=0pt,belowskip=-12pt]{caption}
-% Get the caption package to work with ACM style
-\DeclareCaptionType[placement=b,within=none]{copyrightbox}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newfont{\mycrnotice}{ptmr8t at 7pt}
-\newfont{\myconfname}{ptmri8t at 7pt}
-\let\crnotice\mycrnotice%
-\let\confname\myconfname%
-
-\permission{Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from Permissions@acm.org.}
-\conferenceinfo{}{DMAH 2015, September 4th, Kohala Coast, USA}
-\copyrightetc{}
-\crdata{}
 
 % Allow comments by name
-\newcommand{\note}[2]{
-    \textbf{\textcolor{#1}{#2}}
-}
+\renewcommand{\note}[2]{\textbf{\textcolor{#1}{#2}}}
 \newcommand{\comment}[1]{\note{red}{#1}}
 \newcommand{\dave}[1]{\note{PineGreen}{Dave: #1}}
 \newcommand{\magda}[1]{\note{Cyan}{Magda: #1}}
 \newcommand{\tom}[1]{\note{OrangeRed}{Tom: #1}}
-
 % To remove all notes, uncomment the next line.
 %\renewcommand{\note}[2]{\unskip}
 
-\newcommand{\ie}{{\em i.e.}\ }
-\newcommand{\eg}{{\em e.g.}\ }
-\newcommand{\ea}{{\em et al.}\xspace}
-\newcommand{\aka}{{\em a.k.a.}\ }
-
-\usepackage{url}
-\usepackage[pdftex]{hyperref}
 
 % Figures
 \newcommand{\figureimgs}{
 \begin{figure}[tbp]
   \centering
   \includegraphics[width=\linewidth]{figures/x_ray_image_montage}
-  \vspace{-12pt}
   \caption{\label{fig:imgs}
   	X-ray diffraction images.
     A) An X-ray diffraction image exhibits $d_{10}$, $d_{11}$, and
@@ -64,7 +30,7 @@
     multiple $d_{10}$ peaks which must be segregated during the
     detection process.  
 	}
-	\vspace{-2pt}
+	\vspace{-10pt}
 \end{figure}
 }
 
@@ -72,7 +38,6 @@
 \begin{figure}[tbp]
   \centering
   \includegraphics[width=\linewidth]{figures/img_analysis}
-  \vspace{-8pt}
   \caption{\label{fig:workflow}
   	Analysis workflow.
     The blocked center region is detected and used as a landmark.  Low
@@ -84,40 +49,46 @@
     sampler. We marginalize across peak parameters other than those of
     interest.  
 	}
-	\vspace{-2pt}
+	\vspace{-10pt}
 \end{figure}
 }
 
 \begin{document}
+
+
+%%%%%%%%%%%
+\frontmatter
+\pagestyle{headings}  % switches on printing of running heads
+\addtocmark{MCMC Analysis of X-ray Diffraction Images} % additional mark in the TOC
+
+
+%%%%%%%%%%%
+\mainmatter
 \title{Automated Analysis of Muscle X-ray Diffraction \\ Imaging with MCMC}
-\author{C.\ David Williams$^{1}$,  Magdalena Balazinska$^2$, Thomas Daniel$^1$ \\
-\affaddr{$^1$Department of Biology, $^2$Department of Computer Science \& Engineering}\\
-\affaddr{University of Washington} \\
-}
+\author{C.\ David Williams\inst{1} \and Magdalena Balazinska\inst{1} \and Thomas Daniel\inst{1}}
+\institute{Department of Biology, University of Washington, Seattle WA 98195, USA, \\
+  \email{cdave@uw.edu}
+  }
 \maketitle
 
 
-
-% \dave{Presumably this gets filled in later?}
-%    \vspace{-8pt}
-%    \category{H.2.4}{Database Management}{Systems---Distributed databases, Query processing, Relational databases}
-%    \vspace{-8pt}
-%    \keywords{Myria; parallel data management; Cloud service; astronomy}
-
-
-\sloppy
-
 %%%%%%%%%%%
-%\section{Questions addressed}
-%\label{sec:addressed}
+\begin{abstract}
 
-
-%In this work, we focus on the following questions:
-
-%\begin{itemize}[noitemsep]
-%\item Are sufficient conserved markers available in small-angle scattering diffraction images for automatic segmentation?
-%\item Does MCMC distribution fitting provide reliable estimates of diffraction peak properties such as center and decay?
-%\end{itemize}
+  High-speed X-ray diffraction is the state-of-the-art approach to
+  understanding protein structure and dynamics in living tissues,
+  especially muscles.  Existing analytic approaches, however, require
+  expert hand-digitization to extract parameters of interest. This
+  produces repeatable measurements, but remains subjective and does
+  not offer information on the precision of the measured parameters or
+  strict reproducibility of analyzed data.  We developed a processing
+  tool chain, which first segments the diffraction image into regions
+  of interest using highly conserved features and then samples the
+  possible parameter values with a Markov chain Monte Carlo approach.
+  Our approach produces an automated, reproducible, objective estimate
+  of relevant image parameters.
+  \keywords{image analysis, X-ray diffraction, muscle structure, MCMC modeling}
+\end{abstract}
 
 
 %%%%%%%%%%%
@@ -297,7 +268,7 @@ Our initial data processing pipeline produces an automated,
 reproducible, objective estimate of relevant image parameters but the
 following challenges remain:
 
-\begin{itemize}[noitemsep]
+\begin{itemize}
 \item Development of a declarative language to describe processing
     steps will speed use of this technique and ease reproducibility.
     The key question is to define the types of operations that users
